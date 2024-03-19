@@ -1,5 +1,7 @@
 #include <d2V_membrane_corotational_dq2.h>
-#include <iostream>
+#include <dF_cloth_triangle_dq.h>
+#include <deformation_gradient.h>
+#include <dsvd.h>
 
 void d2V_membrane_corotational_dq2(Eigen::Matrix99d &H, Eigen::Ref<const Eigen::VectorXd> q, Eigen::Ref<const Eigen::Matrix3d> dX, 
                           Eigen::Ref<const Eigen::MatrixXd> V, Eigen::Ref<const Eigen::RowVectorXi> element, double area, 
@@ -15,6 +17,11 @@ void d2V_membrane_corotational_dq2(Eigen::Matrix99d &H, Eigen::Ref<const Eigen::
     double tol = 1e-5;
     
     //Compute SVD of F here
+    deformation_gradient(F, q, V, element, dX);
+    Eigen::JacobiSVD<Eigen::Matrix3d> SVD(F);
+    S = SVD.singularValues();
+    U = SVD.matrixU();
+    W = SVD.matrixV();
     
     //deal with singularity in the svd gradient
     if(std::fabs(S[0] - S[1]) < tol || std::fabs(S[1] - S[2]) < tol || std::fabs(S[0] - S[2]) < tol) {
@@ -49,8 +56,38 @@ void d2V_membrane_corotational_dq2(Eigen::Matrix99d &H, Eigen::Ref<const Eigen::
         W(2, 2) *= -1;
     }
 
-    //TODO: compute H, the hessian of the corotational energy
-    
+
+    // Compute H, the hessian of the corotational energy
+    Eigen::Matrix3d VT = W.transpose();
+    Eigen::Matrix99d dFdq;
+    // compute dFdq
+    dF_cloth_triangle_dq(dFdq, q, dX, V, element);
+    // compute SVD partial derivatives
+    Eigen::Tensor3333d dU, dV;
+    Eigen::Tensor333d dS;
+    dsvd(dU, dS, dV, F);
+    // d(dphi/dF)/dF_ij = dU/dF_ij S V^T + U dS/dF_ij V^T + U S dV^T/dF_ij
+    Eigen::Tensor3333d d2phi;
+    for (int i = 0; i < 3; i ++) {
+        for (int j = 0; j < 3; j ++) {
+            Eigen::DiagonalMatrix<double, 3> dS_mat(dS[i][j]);
+            d2phi[i][j] = dU[i][j] * S * VT
+                        + U * dS_mat * VT
+                        + U * S * dV[i][j].transpose();
+        }
+    }
+    // Flatten the 3x3x3x3 tensor to a 9x9 matrix
+    for (int i1 = 0; i1 < 3; i1 ++) {
+        for (int j1 = 0; j1 < 3; j1 ++) {
+            for (int i2 = 0; i2 < 3; i2 ++) {
+                for (int j2 = 0; j2 < 3; j2 ++) {
+                    H(3 * i1 + j1, 3 * i2 + j2) = d2phi[i1][j1](i2, j2);
+                }
+            }
+        }
+    }
+    // H_j = (dF/dq_j)^T * (d2phi/F2) * (dF/dq_j)
+    H = dFdq.transpose() * H * dFdq;
 
     //fix errant eigenvalues
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix99d> es(H);

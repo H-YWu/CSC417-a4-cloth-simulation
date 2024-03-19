@@ -21,7 +21,7 @@ void deformation_gradient(Eigen::Matrix3d &F,
         x[i] = q.segment(element(i)*3, 3);
         left.col(i) = x[i]; 
     }
-    left.col(3) = triangle_normal(x[0], x[1], x[2]);
+    left.col(3) = triangle_normal(x[0], x[1], x[2]).normalized();
     Eigen::Matrix43d right;
     right.block(0, 0, 3, 3) = dphidX;
     right.row(3) = triangle_normal(X[0], X[1], X[2]).transpose();;

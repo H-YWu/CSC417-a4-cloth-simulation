@@ -19,8 +19,25 @@ template<typename FORCE, typename STIFFNESS>
 inline void linearly_implicit_euler(Eigen::VectorXd &q, Eigen::VectorXd &qdot, double dt, 
                             const Eigen::SparseMatrixd &mass,  FORCE &force, STIFFNESS &stiffness, 
                             Eigen::VectorXd &tmp_force, Eigen::SparseMatrixd &tmp_stiffness) {
-    
-    
+    // (M - dt^2 K) qdot<t+1> = M qdot<t> + dt f(q<t>)
+    //                 q<t+1> = q<t> + dt qdot<t+1>
+    //  A = M - dt^2 K
+    //  b = M qdot<t> + dt f(q<t>)
+    //  Solve A qdot = b
+    //  Then q = q + dt * qdot
 
+    stiffness(tmp_stiffness, q, qdot);
+    force(tmp_force, q, qdot);
+    Eigen::SparseMatrixd A = mass - pow(dt, 2) * tmp_stiffness;
+    Eigen::VectorXd b = mass * qdot + dt * tmp_force;
 
+    // Use Simplicial LDLT solver to solve the SPD system
+    Eigen::SimplicialLDLT<Eigen::SparseMatrix<double> > solver;
+    solver.compute(A);
+    if (solver.info() != Eigen::Success) {
+        std::cerr << "ERROR: Solving Ax = b failed!" << std::endl;
+        return;
+    }
+    qdot = solver.solve(b);
+    q = q + dt * qdot; 
 }

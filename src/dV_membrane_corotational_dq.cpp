@@ -1,5 +1,6 @@
 #include <dV_membrane_corotational_dq.h>
-#include <iostream>
+#include <deformation_gradient.h>
+#include <dF_cloth_triangle_dq.h>
 
 void dV_membrane_corotational_dq(Eigen::Vector9d &dV, Eigen::Ref<const Eigen::VectorXd> q, Eigen::Ref<const Eigen::Matrix3d> dX, 
                           Eigen::Ref<const Eigen::MatrixXd> V, Eigen::Ref<const Eigen::RowVectorXi> element, double area, 
@@ -11,7 +12,11 @@ void dV_membrane_corotational_dq(Eigen::Vector9d &dV, Eigen::Ref<const Eigen::Ve
     Eigen::Vector3d S; 
     Eigen::Matrix3d W; 
 
-    //TODO: SVD Here
+    deformation_gradient(dx, q, V, element, dX);
+    Eigen::JacobiSVD<Eigen::Matrix3d> SVD(dx);
+    S = SVD.singularValues();
+    U = SVD.matrixU();
+    W = SVD.matrixV();
 
     //Fix for inverted elements (thanks to Danny Kaufman)
     double det = S[0]*S[1];
@@ -37,6 +42,22 @@ void dV_membrane_corotational_dq(Eigen::Vector9d &dV, Eigen::Ref<const Eigen::Ve
         W(2, 2) *= -1;
     }
     
-    //TODO: energy model gradient 
-
+    // dV/ds
+    Eigen::Matrix3d dVds;
+    double tmp = lambda * (S(0) + S(1) + S(2) - 3.0);
+    for (int i = 0; i < 3; i ++) {
+        dVds.coeffRef(i, i) = 2.0 * mu * (S(i) - 1.0) + tmp;
+    }
+    // dV/dF
+    Eigen::Matrix3d dV_mat = U * dVds * W.transpose();
+    for (int i = 0; i < 3; i ++) {
+        for (int k = 0; k < 3; k ++) {
+            dV(i * 3 + k) = dV_mat(i, k);
+        }
+    }
+    // dV/dq_j
+    Eigen::Matrix99d dFdq;
+    dF_cloth_triangle_dq(dFdq, q, dX, V, element);
+    //  dV/dq_j = (dF/dq_j)^T * dV/dF
+    dV = area * dFdq.transpose() * dV;
 }

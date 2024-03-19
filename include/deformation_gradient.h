@@ -2,6 +2,14 @@
 #include <EigenTypes.h>
 
 //Input:
+// xi - vertex of triangle 
+//Output:
+// return the normal vector X01 x X02 (not normalized)
+Eigen::Vector3d triangle_normal(Eigen::Vector3d X0,
+                     Eigen::Vector3d X1,
+                     Eigen::Vector3d X2);
+
+//Input:
 // q - generalized coordinates of FEM system
 // V - vertex matrix for the mesh
 // element - vertex indices of the element
