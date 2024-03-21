@@ -8,8 +8,8 @@ void assemble_stiffness(Eigen::SparseMatrixd &K, Eigen::Ref<const Eigen::VectorX
     K.resize(qdot.size(), qdot.size());
     // all triangles 
     std::vector<Eigen::Triplet<double>> triples;
-    for (int r = 0; r < V.rows(); r ++) {
-        Eigen::RowVector3i element = V.row(r);
+    for (int r = 0; r < F.rows(); r ++) {
+        Eigen::RowVector3i element = F.row(r);
         Eigen::Matrix99d H;
         Eigen::Matrix<double,1,9> tmp_row;
         tmp_row = dX.row(r);

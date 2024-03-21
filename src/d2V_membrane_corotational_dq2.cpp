@@ -68,12 +68,13 @@ void d2V_membrane_corotational_dq2(Eigen::Matrix99d &H, Eigen::Ref<const Eigen::
     dsvd(dU, dS, dV, F);
     // d(dphi/dF)/dF_ij = dU/dF_ij S V^T + U dS/dF_ij V^T + U S dV^T/dF_ij
     Eigen::Tensor3333d d2phi;
+    Eigen::DiagonalMatrix<double, 3> S_mat(S);
     for (int i = 0; i < 3; i ++) {
         for (int j = 0; j < 3; j ++) {
             Eigen::DiagonalMatrix<double, 3> dS_mat(dS[i][j]);
-            d2phi[i][j] = dU[i][j] * S * VT
+            d2phi[i][j] = dU[i][j] * S_mat * VT
                         + U * dS_mat * VT
-                        + U * S * dV[i][j].transpose();
+                        + U * S_mat * dV[i][j].transpose();
         }
     }
     // Flatten the 3x3x3x3 tensor to a 9x9 matrix

@@ -34,6 +34,7 @@ void mass_matrix_mesh(Eigen::SparseMatrixd &M, Eigen::Ref<const Eigen::VectorXd>
         // m(x, y) for x,y = 0..11
         //  (m E)(x, 3 * idx[i] + j) += m(x, 3i + j) for x = 0..11, i = 0..2, j = 0..2
         // M: (E^T m E) (3 * idx[I] + J, 3 * idx[i] + j) += m(3I + J, 3i + j) for I = 0..2, J = 0..2, i = 0..2, j = 0..2
+        Eigen::RowVector3i element = F.row(r);
         // area of this triangle
         double a = areas(r);
         for (int I = 0; I < 3; I ++) {
