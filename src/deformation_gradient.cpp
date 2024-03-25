@@ -14,7 +14,8 @@ void deformation_gradient(Eigen::Matrix3d &F,
                         Eigen::Ref<const Eigen::RowVectorXi> element,
                         Eigen::Ref<const Eigen::Matrix3d> dphidX){
     // the 3x3 delta X matrix of a single triangle
-    std::vector<Eigen::Vector3d> x, X;
+    std::vector<Eigen::Vector3d> x(3);
+    std::vector<Eigen::Vector3d> X(3);
     Eigen::Matrix34d left;
     for (int i = 0; i < 3; i ++) {
         X[i] = V.row(element(i));
@@ -24,7 +25,7 @@ void deformation_gradient(Eigen::Matrix3d &F,
     left.col(3) = triangle_normal(x[0], x[1], x[2]).normalized();
     Eigen::Matrix43d right;
     right.block(0, 0, 3, 3) = dphidX;
-    right.row(3) = triangle_normal(X[0], X[1], X[2]).transpose();;
+    right.row(3) = triangle_normal(X[0], X[1], X[2]).normalized().transpose();
     // F = \sum_i x_i \diff{phi_i}{X} + n * N^T
     F = left * right;
 }

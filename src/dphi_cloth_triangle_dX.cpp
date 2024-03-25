@@ -13,17 +13,17 @@ void dphi_cloth_triangle_dX(Eigen::Matrix3d &dphi, Eigen::Ref<const Eigen::Matri
     for (int i = 0; i < 3; i ++) {
         XX[i] = V.row(element(i));
     }
-    Eigen::MatrixXd T(3, 2);
+    Eigen::Matrix32d T;
     for (int i = 0; i < 2; i ++) {
         T.col(i) = XX[i+1] - XX[0];
     }
     Eigen::MatrixXd TT = T.transpose();
-    Eigen::MatrixXd TTT = T.transpose() * T;
-    Eigen::MatrixXd TTTinv = TTT.inverse();
-    Eigen::MatrixXd TTTinvTT = TTT.inverse() * TT;
+    Eigen::MatrixXd TTxT = T.transpose() * T;
+    Eigen::MatrixXd TTxTinv = TTxT.inverse();
+    Eigen::MatrixXd TTxTinvxTT = TTxTinv * TT;
     dphi.row(0) << 0., 0., 0.;
     for (int i = 0; i < 2; i ++) {
-        dphi.row(i+1) = TTTinvTT.row(i);
-        dphi.row(0) -= TTTinvTT.row(i);
+        dphi.row(i+1) = TTxTinvxTT.row(i);
+        dphi.row(0) -= TTxTinvxTT.row(i);
     }
 }

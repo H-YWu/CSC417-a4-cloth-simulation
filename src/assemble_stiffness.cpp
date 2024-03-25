@@ -11,6 +11,7 @@ void assemble_stiffness(Eigen::SparseMatrixd &K, Eigen::Ref<const Eigen::VectorX
     for (int r = 0; r < F.rows(); r ++) {
         Eigen::RowVector3i element = F.row(r);
         Eigen::Matrix99d H;
+        H.setZero();
         Eigen::Matrix<double,1,9> tmp_row;
         tmp_row = dX.row(r);
         d2V_membrane_corotational_dq2(H, q, Eigen::Map<const Eigen::Matrix3d>(tmp_row.data()), V, element, a0(r), mu, lambda);

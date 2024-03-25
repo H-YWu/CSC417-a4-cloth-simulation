@@ -13,7 +13,7 @@ void dV_membrane_corotational_dq(Eigen::Vector9d &dV, Eigen::Ref<const Eigen::Ve
     Eigen::Matrix3d W; 
 
     deformation_gradient(dx, q, V, element, dX);
-    Eigen::JacobiSVD<Eigen::Matrix3d> SVD(dx);
+    Eigen::JacobiSVD<Eigen::Matrix3d> SVD(dx, Eigen::ComputeFullU | Eigen::ComputeFullV);
     S = SVD.singularValues();
     U = SVD.matrixU();
     W = SVD.matrixV();
@@ -44,11 +44,13 @@ void dV_membrane_corotational_dq(Eigen::Vector9d &dV, Eigen::Ref<const Eigen::Ve
     
     // dV/ds
     Eigen::Matrix3d dVds;
+    dVds.setZero();
     double tmp = lambda * (S(0) + S(1) + S(2) - 3.0);
     for (int i = 0; i < 3; i ++) {
         dVds.coeffRef(i, i) = 2.0 * mu * (S(i) - 1.0) + tmp;
     }
     // dV/dF
+    dV.setZero();
     Eigen::Matrix3d dV_mat = U * dVds * W.transpose();
     for (int i = 0; i < 3; i ++) {
         for (int k = 0; k < 3; k ++) {

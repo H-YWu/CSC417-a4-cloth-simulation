@@ -120,18 +120,17 @@ inline void simulate(Eigen::VectorXd &q, Eigen::VectorXd &qdot, double dt, doubl
 
     auto force = [&](Eigen::VectorXd &f, Eigen::Ref<const Eigen::VectorXd> q2, Eigen::Ref<const Eigen::VectorXd> qdot2) { 
         
-            assemble_forces(f, P.transpose()*q2+x0, P.transpose()*qdot2, dX, V, F, a0, C,D);
-            f -= gravity;
-        
-            for(unsigned int pickedi = 0; pickedi < spring_points.size(); pickedi++) {
-                dV_spring_particle_particle_dq(dV_mouse, spring_points[pickedi].first, (P.transpose()*q2+x0).segment<3>(spring_points[pickedi].second), 0.0, k_selected_now);
-                f.segment<3>(3*Visualize::picked_vertices()[pickedi]) -= dV_mouse.segment<3>(3);
-            }
+        assemble_forces(f, P.transpose()*q2+x0, P.transpose()*qdot2, dX, V, F, a0, C,D);
+        f -= gravity;
+    
+        for(unsigned int pickedi = 0; pickedi < spring_points.size(); pickedi++) {
+            dV_spring_particle_particle_dq(dV_mouse, spring_points[pickedi].first, (P.transpose()*q2+x0).segment<3>(spring_points[pickedi].second), 0.0, k_selected_now);
+            f.segment<3>(3*Visualize::picked_vertices()[pickedi]) -= dV_mouse.segment<3>(3);
+        }
 
-        
-            f = P*f;
-            //std::cout<<"Force: "<<f.transpose()<<"\n";
-        };
+        f = P*f;
+        //std::cout<<"Force: "<<f.transpose()<<"\n";
+    };
 
     //assemble stiffness matrix,
     auto stiffness = [&](Eigen::SparseMatrixd &K, Eigen::Ref<const Eigen::VectorXd> q2, Eigen::Ref<const Eigen::VectorXd> qdot2) { 
@@ -244,7 +243,7 @@ inline void assignment_setup(int argc, char **argv, Eigen::VectorXd &q, Eigen::V
     
     //constant gravity vector
     gravity.resize(q.rows(),1);
-    dV_cloth_gravity_dq(gravity, M, Eigen::Vector3d(0,-1800.8,0));
+    dV_cloth_gravity_dq(gravity, M, Eigen::Vector3d(0,1800.8,0));
 
     //std::cout<<"Gravity "<<gravity.transpose()<<"\n";
     

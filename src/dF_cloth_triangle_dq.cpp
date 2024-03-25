@@ -21,7 +21,7 @@ void dF_cloth_triangle_dq(Eigen::Matrix99d &dFdq, Eigen::Ref<const Eigen::Vector
         Xj[i] = V.row(element(i));
         qj[i] = q.segment(element(i)*3, 3);
     }
-    Eigen::Vector3d N_ = triangle_normal(Xj[0], Xj[1], Xj[2]);
+    Eigen::Vector3d N_ = triangle_normal(Xj[0], Xj[1], Xj[2]).normalized();
     Eigen::Matrix93d N; N.setZero();
     for (int i = 0; i < 3; i ++) {
         for (int k = 0; k < 3; k ++) {
