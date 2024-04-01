@@ -6,7 +6,7 @@ void velocity_filter_cloth_sphere(Eigen::VectorXd &qdot, const std::vector<unsig
         int id = indices[i];
         Eigen::Vector3d n = normals[i];
         Eigen::Vector3d vel = qdot.segment(i*3, 3);
-        vel = vel - 2.0 * n.dot(vel) * n;
-        qdot.segment<3>(i) = vel;
+        vel = vel - n.dot(vel) * n;
+        qdot.segment<3>(3*i) = vel;
     }
 }
